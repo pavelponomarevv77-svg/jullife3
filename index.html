@@ -1,0 +1,2062 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Распределение сотрудников по уборкам с временными слотами</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .controls-panel {
+            flex: 1;
+            min-width: 350px;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .distribution-panel {
+            flex: 2;
+            min-width: 400px;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+        }
+        
+        h2 i {
+            margin-right: 10px;
+            color: #4b6cb7;
+        }
+        
+        .date-controls {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #34495e;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus {
+            border-color: #4b6cb7;
+            outline: none;
+        }
+        
+        .employees-count {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 5px;
+        }
+        
+        .employees-count span {
+            font-weight: bold;
+            color: #4b6cb7;
+            font-size: 18px;
+        }
+        
+        .cleaning-types {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .cleaning-type {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #4b6cb7;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .cleaning-type:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.08);
+        }
+        
+        .cleaning-type h3 {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .cleaning-type.supports {
+            border-left-color: #2ecc71;
+        }
+        
+        .cleaning-type.general {
+            border-left-color: #e74c3c;
+        }
+        
+        .cleaning-type.general-light {
+            border-left-color: #f39c12;
+        }
+        
+        .cleaning-type.after-repair {
+            border-left-color: #9b59b6;
+        }
+        
+        .time-slots-container {
+            margin-top: 15px;
+        }
+        
+        .time-slot-group {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #eee;
+        }
+        
+        .time-slot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .time-slot-title {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .time-slot-hours {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            background: #f1f2f6;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+        
+        .time-input-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .time-input {
+            width: 60px !important;
+            text-align: center;
+            padding: 8px 5px !important;
+        }
+        
+        .employee-slots {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+            min-height: 45px;
+        }
+        
+        .slot {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 13px;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .slot.empty {
+            background-color: #ecf0f1;
+            color: #7f8c8d;
+            border: 2px dashed #bdc3c7;
+        }
+        
+        .slot.filled {
+            cursor: pointer;
+        }
+        
+        .slot.filled:hover {
+            transform: scale(1.1);
+        }
+        
+        .slot.available-evening {
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 0 2px rgba(46, 204, 113, 0.5);
+        }
+        
+        .slot.available-evening::after {
+            content: "→";
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #2ecc71;
+            color: white;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 5px rgba(46, 204, 113, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
+            }
+        }
+        
+        .time-progress {
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: #7f8c8d;
+        }
+        
+        .progress-bar {
+            height: 6px;
+            background: #ecf0f1;
+            border-radius: 3px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+        
+        .distribution-summary {
+            margin-top: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        
+        .summary-item {
+            text-align: center;
+            padding: 10px;
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        .summary-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .summary-label {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        
+        .time-distribution-summary {
+            margin-top: 25px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        .time-slots-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .time-summary-item {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            border: 1px solid #eee;
+        }
+        
+        .time-summary-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .time-summary-label {
+            font-size: 13px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        
+        .completion-time {
+            font-size: 13px;
+            color: #2c3e50;
+            margin-top: 5px;
+            font-weight: 600;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-primary {
+            background-color: #4b6cb7;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #3a5795;
+        }
+        
+        .btn-secondary {
+            background-color: #ecf0f1;
+            color: #34495e;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #d5dbdb;
+        }
+        
+        .btn-success {
+            background-color: #2ecc71;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+        
+        button i {
+            margin-right: 8px;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background-color: #2ecc71;
+            color: white;
+            border-radius: 6px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            display: none;
+            z-index: 1000;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        .data-edit-info {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .data-edit-info h4 {
+            color: #856404;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .data-edit-info h4 i {
+            margin-right: 8px;
+        }
+        
+        .dates-list-container {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            padding: 10px;
+            background: white;
+        }
+        
+        .date-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 10px;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        
+        .date-item:last-child {
+            border-bottom: none;
+        }
+        
+        .date-info {
+            flex: 1;
+        }
+        
+        .date-value {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .date-employees {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .date-employees-input {
+            width: 70px;
+            padding: 5px 8px;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .date-employees-input:focus {
+            border-color: #4b6cb7;
+            outline: none;
+        }
+        
+        .date-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .btn-icon {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-icon:hover {
+            background: #e9ecef;
+        }
+        
+        .btn-icon.save {
+            color: #2ecc71;
+        }
+        
+        .btn-icon.cancel {
+            color: #e74c3c;
+        }
+        
+        .btn-icon.edit {
+            color: #3498db;
+        }
+        
+        .add-date-container {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border: 1px dashed #bdc3c7;
+        }
+        
+        .add-date-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .add-date-input {
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        .add-date-employees {
+            width: 80px;
+        }
+        
+        .evening-availability {
+            margin-top: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border-radius: 8px;
+            border: 1px solid #a5d6a7;
+        }
+        
+        .evening-availability h4 {
+            color: #2e7d32;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .evening-availability h4 i {
+            margin-right: 8px;
+        }
+        
+        .availability-slots {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .availability-slot {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            background: #2ecc71;
+            color: white;
+            border: 2px solid #27ae60;
+            position: relative;
+        }
+        
+        .availability-slot::after {
+            content: "→";
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #2ecc71;
+            color: white;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid white;
+        }
+        
+        .availability-info {
+            font-size: 0.9rem;
+            color: #2e7d32;
+            margin-top: 10px;
+        }
+        
+        .limit-warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #856404;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .controls-panel, .distribution-panel {
+                width: 100%;
+            }
+            
+            .cleaning-types {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-broom"></i> Распределение сотрудников по уборкам</h1>
+            <p class="subtitle">Распределение сотрудников по уборкам с учетом временных смен (утро, день, вечер)</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="controls-panel">
+                <h2><i class="fas fa-sliders-h"></i> Параметры распределения</h2>
+                
+                <div class="date-controls">
+                    <div class="form-group">
+                        <label for="shift-date"><i class="far fa-calendar-alt"></i> Выберите дату смены:</label>
+                        <input type="text" id="shift-date" placeholder="Нажмите для выбора даты" readonly>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="shift-employees">Количество сотрудников на смене:</label>
+                        <div class="employees-count">
+                            <input type="number" id="shift-employees" min="1" max="50" value="10" readonly>
+                            <span>Доступно: <span id="available-employees">10</span></span>
+                        </div>
+                        <div id="limit-warning" class="limit-warning" style="display: none;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>Вы распределили всех сотрудников. Для назначения дополнительных сотрудников освободите кого-то из текущих распределений.</span>
+                        </div>
+                        <p style="font-size: 0.9rem; color: #7f8c8d; margin-top: 5px;">
+                            <i class="fas fa-info-circle"></i> Количество автоматически подгружается при выборе даты
+                        </p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><i class="fas fa-info-circle"></i> Данные по датам в памяти:</label>
+                        <div style="font-size: 0.9rem; color: #7f8c8d; margin-top: 5px;">
+                            <p>В системе загружены данные на следующие даты:</p>
+                            <div class="dates-list-container" id="dates-list-container">
+                                <!-- Список дат будет загружен автоматически -->
+                            </div>
+                            <p style="margin-top: 10px;">Выберите дату в календаре, чтобы система подставила значение автоматически.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Распределить сотрудников по видам уборок:</label>
+                    <div class="cleaning-types">
+                        <div class="cleaning-type supports">
+                            <h3><i class="fas fa-broom"></i> Поддерживающая уборка</h3>
+                            <p class="time-progress"><i class="fas fa-clock"></i> 4 часа на 1 сотрудника</p>
+                            
+                            <div class="time-slots-container">
+                                <div class="time-slot-group">
+                                    <div class="time-slot-header">
+                                        <div class="time-slot-title">Утренняя смена</div>
+                                        <div class="time-slot-hours">8:00 - 12:00</div>
+                                    </div>
+                                    <div class="time-input-group">
+                                        <input type="number" class="time-input cleaning-time-input" data-type="supports" data-time="morning" min="0" max="10" value="0">
+                                        <span>сотрудников</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="time-slot-group">
+                                    <div class="time-slot-header">
+                                        <div class="time-slot-title">Дневная смена</div>
+                                        <div class="time-slot-hours">12:00 - 16:00</div>
+                                    </div>
+                                    <div class="time-input-group">
+                                        <input type="number" class="time-input cleaning-time-input" data-type="supports" data-time="day" min="0" max="10" value="0">
+                                        <span>сотрудников</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="time-slot-group">
+                                    <div class="time-slot-header">
+                                        <div class="time-slot-title">Вечерняя смена</div>
+                                        <div class="time-slot-hours">16:00 - 20:00</div>
+                                    </div>
+                                    <div class="time-input-group">
+                                        <input type="number" class="time-input cleaning-time-input" data-type="supports" data-time="evening" min="0" max="10" value="0">
+                                        <span>сотрудников</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="cleaning-type general">
+                            <h3><i class="fas fa-broom"></i> Генеральная уборка</h3>
+                            <p class="time-progress"><i class="fas fa-clock"></i> 4 часа на 1 сотрудника</p>
+                            
+                            <div class="time-slots-container">
+                                <div class="time-slot-group">
+                                    <div class="time-slot-header">
+                                        <div class="time-slot-title">Утренняя смена</div>
+                                        <div class="time-slot-hours">8:00 - 12:00</div>
+                                    </div>
+                                    <div class="time-input-group">
+                                        <input type="number" class="time-input cleaning-time-input" data-type="general" data-time="morning" min="0" max="10" value="0">
+                                        <span>сотрудников</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="time-slot-group">
+                                    <div class="time-slot-header">
+                                        <div class="time-slot-title">Дневная смена</div>
+                                        <div class="time-slot-hours">12:00 - 16:00</div>
+                                    </div>
+                                    <div class="time-input-group">
+                                        <input type="number" class="time-input cleaning-time-input" data-type="general" data-time="day" min="0" max="10" value="0">
+                                        <span>сотрудников</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="time-slot-group">
+                                    <div class="time-slot-header">
+                                        <div class="time-slot-title">Вечерняя смена</div>
+                                        <div class="time-slot-hours">16:00 - 20:00</div>
+                                    </div>
+                                    <div class="time-input-group">
+                                        <input type="number" class="time-input cleaning-time-input" data-type="general" data-time="evening" min="0" max="10" value="0">
+                                        <span>сотрудников</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="cleaning-type general-light">
+                            <h3><i class="fas fa-broom"></i> Генеральная лайт</h3>
+                            <p class="time-progress"><i class="fas fa-clock"></i> 4 часа на 1 сотрудника</p>
+                            
+                            <div class="time-slots-container">
+                                <div class="time-slot-group">
+                                    <div class="time-slot-header">
+                                        <div class="time-slot-title">Утренняя смена</div>
+                                        <div class="time-slot-hours">8:00 - 12:00</div>
+                                    </div>
+                                    <div class="time-input-group">
+                                        <input type="number" class="time-input cleaning-time-input" data-type="general-light" data-time="morning" min="0" max="10" value="0">
+                                        <span>сотрудников</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="time-slot-group">
+                                    <div class="time-slot-header">
+                                        <div class="time-slot-title">Дневная смена</div>
+                                        <div class="time-slot-hours">12:00 - 16:00</div>
+                                    </div>
+                                    <div class="time-input-group">
+                                        <input type="number" class="time-input cleaning-time-input" data-type="general-light" data-time="day" min="0" max="10" value="0">
+                                        <span>сотрудников</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="time-slot-group">
+                                    <div class="time-slot-header">
+                                        <div class="time-slot-title">Вечерняя смена</div>
+                                        <div class="time-slot-hours">16:00 - 20:00</div>
+                                    </div>
+                                    <div class="time-input-group">
+                                        <input type="number" class="time-input cleaning-time-input" data-type="general-light" data-time="evening" min="0" max="10" value="0">
+                                        <span>сотрудников</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="cleaning-type after-repair">
+                            <h3><i class="fas fa-broom"></i> Уборка после ремонта</h3>
+                            <p class="time-progress"><i class="fas fa-clock"></i> 4 часа на 1 сотрудника</p>
+                            
+                            <div class="time-slots-container">
+                                <div class="time-slot-group">
+                                    <div class="time-slot-header">
+                                        <div class="time-slot-title">Утренняя смена</div>
+                                        <div class="time-slot-hours">8:00 - 12:00</div>
+                                    </div>
+                                    <div class="time-input-group">
+                                        <input type="number" class="time-input cleaning-time-input" data-type="after-repair" data-time="morning" min="0" max="10" value="0">
+                                        <span>сотрудников</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="time-slot-group">
+                                    <div class="time-slot-header">
+                                        <div class="time-slot-title">Дневная смена</div>
+                                        <div class="time-slot-hours">12:00 - 16:00</div>
+                                    </div>
+                                    <div class="time-input-group">
+                                        <input type="number" class="time-input cleaning-time-input" data-type="after-repair" data-time="day" min="0" max="10" value="0">
+                                        <span>сотрудников</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="time-slot-group">
+                                    <div class="time-slot-header">
+                                        <div class="time-slot-title">Вечерняя смена</div>
+                                        <div class="time-slot-hours">16:00 - 20:00</div>
+                                    </div>
+                                    <div class="time-input-group">
+                                        <input type="number" class="time-input cleaning-time-input" data-type="after-repair" data-time="evening" min="0" max="10" value="0">
+                                        <span>сотрудников</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="error-message" id="error-message">
+                    <i class="fas fa-exclamation-triangle"></i> <span id="error-text"></span>
+                </div>
+                
+                <div class="buttons">
+                    <button class="btn-primary" id="distribute-btn">
+                        <i class="fas fa-users"></i> Сохранить распределение
+                    </button>
+                    <button class="btn-secondary" id="reset-btn">
+                        <i class="fas fa-redo"></i> Сбросить распределение
+                    </button>
+                </div>
+                
+                <div class="add-date-container">
+                    <h4 style="margin-bottom: 10px; color: #2c3e50;"><i class="fas fa-plus-circle"></i> Добавить новую дату</h4>
+                    <div class="add-date-form">
+                        <input type="text" id="new-date-input" class="add-date-input" placeholder="ДД.ММ.ГГГГ">
+                        <input type="number" id="new-employees-input" class="add-date-employees" min="1" max="50" placeholder="Кол-во" value="10">
+                        <button class="btn-success" id="add-date-btn">
+                            <i class="fas fa-plus"></i> Добавить
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="distribution-panel">
+                <h2><i class="fas fa-tasks"></i> Визуализация распределения</h2>
+                <p style="margin-bottom: 15px; color: #7f8c8d;">Дата смены: <strong id="current-date-display">не выбрана</strong></p>
+                
+                <div class="cleaning-types">
+                    <div class="cleaning-type supports">
+                        <h3><i class="fas fa-broom"></i> Поддерживающая уборка</h3>
+                        <p>Сотрудников назначено: <strong id="supports-assigned">0</strong></p>
+                        
+                        <div class="time-slots-container">
+                            <div class="time-slot-group">
+                                <div class="time-slot-header">
+                                    <div class="time-slot-title">Утренняя смена (8-12)</div>
+                                    <div class="time-slot-hours" id="supports-morning-count">0 чел.</div>
+                                </div>
+                                <div class="employee-slots" id="supports-morning-slots">
+                                    <!-- Слоты будут добавляться динамически -->
+                                </div>
+                                <div class="completion-time" id="supports-morning-completion">
+                                    Завершение: - 
+                                </div>
+                            </div>
+                            
+                            <div class="time-slot-group">
+                                <div class="time-slot-header">
+                                    <div class="time-slot-title">Дневная смена (12-16)</div>
+                                    <div class="time-slot-hours" id="supports-day-count">0 чел.</div>
+                                </div>
+                                <div class="employee-slots" id="supports-day-slots">
+                                    <!-- Слоты будут добавляться динамически -->
+                                </div>
+                                <div class="completion-time" id="supports-day-completion">
+                                    Завершение: - 
+                                </div>
+                            </div>
+                            
+                            <div class="time-slot-group">
+                                <div class="time-slot-header">
+                                    <div class="time-slot-title">Вечерняя смена (16-20)</div>
+                                    <div class="time-slot-hours" id="supports-evening-count">0 чел.</div>
+                                </div>
+                                <div class="employee-slots" id="supports-evening-slots">
+                                    <!-- Слоты будут добавляться динамически -->
+                                </div>
+                                <div class="completion-time" id="supports-evening-completion">
+                                    Завершение: - 
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="cleaning-type general">
+                        <h3><i class="fas fa-broom"></i> Генеральная уборка</h3>
+                        <p>Сотрудников назначено: <strong id="general-assigned">0</strong></p>
+                        
+                        <div class="time-slots-container">
+                            <div class="time-slot-group">
+                                <div class="time-slot-header">
+                                    <div class="time-slot-title">Утренняя смена (8-12)</div>
+                                    <div class="time-slot-hours" id="general-morning-count">0 чел.</div>
+                                </div>
+                                <div class="employee-slots" id="general-morning-slots">
+                                    <!-- Слоты будут добавляться динамически -->
+                                </div>
+                                <div class="completion-time" id="general-morning-completion">
+                                    Завершение: - 
+                                </div>
+                            </div>
+                            
+                            <div class="time-slot-group">
+                                <div class="time-slot-header">
+                                    <div class="time-slot-title">Дневная смена (12-16)</div>
+                                    <div class="time-slot-hours" id="general-day-count">0 чел.</div>
+                                </div>
+                                <div class="employee-slots" id="general-day-slots">
+                                    <!-- Слоты будут добавляться динамически -->
+                                </div>
+                                <div class="completion-time" id="general-day-completion">
+                                    Завершение: - 
+                                </div>
+                            </div>
+                            
+                            <div class="time-slot-group">
+                                <div class="time-slot-header">
+                                    <div class="time-slot-title">Вечерняя смена (16-20)</div>
+                                    <div class="time-slot-hours" id="general-evening-count">0 чел.</div>
+                                </div>
+                                <div class="employee-slots" id="general-evening-slots">
+                                    <!-- Слоты будут добавляться динамически -->
+                                </div>
+                                <div class="completion-time" id="general-evening-completion">
+                                    Завершение: - 
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="cleaning-type general-light">
+                        <h3><i class="fas fa-broom"></i> Генеральная лайт</h3>
+                        <p>Сотрудников назначено: <strong id="general-light-assigned">0</strong></p>
+                        
+                        <div class="time-slots-container">
+                            <div class="time-slot-group">
+                                <div class="time-slot-header">
+                                    <div class="time-slot-title">Утренняя смена (8-12)</div>
+                                    <div class="time-slot-hours" id="general-light-morning-count">0 чел.</div>
+                                </div>
+                                <div class="employee-slots" id="general-light-morning-slots">
+                                    <!-- Слоты будут добавляться динамически -->
+                                </div>
+                                <div class="completion-time" id="general-light-morning-completion">
+                                    Завершение: - 
+                                </div>
+                            </div>
+                            
+                            <div class="time-slot-group">
+                                <div class="time-slot-header">
+                                    <div class="time-slot-title">Дневная смена (12-16)</div>
+                                    <div class="time-slot-hours" id="general-light-day-count">0 чел.</div>
+                                </div>
+                                <div class="employee-slots" id="general-light-day-slots">
+                                    <!-- Слоты будут добавляться динамически -->
+                                </div>
+                                <div class="completion-time" id="general-light-day-completion">
+                                    Завершение: - 
+                                </div>
+                            </div>
+                            
+                            <div class="time-slot-group">
+                                <div class="time-slot-header">
+                                    <div class="time-slot-title">Вечерняя смена (16-20)</div>
+                                    <div class="time-slot-hours" id="general-light-evening-count">0 чел.</div>
+                                </div>
+                                <div class="employee-slots" id="general-light-evening-slots">
+                                    <!-- Слоты будут добавляться динамически -->
+                                </div>
+                                <div class="completion-time" id="general-light-evening-completion">
+                                    Завершение: - 
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="cleaning-type after-repair">
+                        <h3><i class="fas fa-broom"></i> Уборка после ремонта</h3>
+                        <p>Сотрудников назначено: <strong id="after-repair-assigned">0</strong></p>
+                        
+                        <div class="time-slots-container">
+                            <div class="time-slot-group">
+                                <div class="time-slot-header">
+                                    <div class="time-slot-title">Утренняя смена (8-12)</div>
+                                    <div class="time-slot-hours" id="after-repair-morning-count">0 чел.</div>
+                                </div>
+                                <div class="employee-slots" id="after-repair-morning-slots">
+                                    <!-- Слоты будут добавляться динамически -->
+                                </div>
+                                <div class="completion-time" id="after-repair-morning-completion">
+                                    Завершение: - 
+                                </div>
+                            </div>
+                            
+                            <div class="time-slot-group">
+                                <div class="time-slot-header">
+                                    <div class="time-slot-title">Дневная смена (12-16)</div>
+                                    <div class="time-slot-hours" id="after-repair-day-count">0 чел.</div>
+                                </div>
+                                <div class="employee-slots" id="after-repair-day-slots">
+                                    <!-- Слоты будут добавляться динамически -->
+                                </div>
+                                <div class="completion-time" id="after-repair-day-completion">
+                                    Завершение: - 
+                                </div>
+                            </div>
+                            
+                            <div class="time-slot-group">
+                                <div class="time-slot-header">
+                                    <div class="time-slot-title">Вечерняя смена (16-20)</div>
+                                    <div class="time-slot-hours" id="after-repair-evening-count">0 чел.</div>
+                                </div>
+                                <div class="employee-slots" id="after-repair-evening-slots">
+                                    <!-- Слоты будут добавляться динамически -->
+                                </div>
+                                <div class="completion-time" id="after-repair-evening-completion">
+                                    Завершение: - 
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="distribution-summary">
+                    <div class="summary-item">
+                        <div class="summary-value" id="total-employees">0</div>
+                        <div class="summary-label">Всего на смене</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value" id="assigned-employees">0</div>
+                        <div class="summary-label">Распределено</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value" id="remaining-employees">0</div>
+                        <div class="summary-label">Осталось</div>
+                    </div>
+                </div>
+                
+                <div class="evening-availability">
+                    <h4><i class="fas fa-user-clock"></i> Доступны для вечерней смены (16-20)</h4>
+                    <div class="availability-info">
+                        Сотрудники, завершившие утреннюю смену (8-12), могут быть привлечены к работе вечером (16-20)
+                    </div>
+                    <div class="availability-slots" id="evening-availability-slots">
+                        <!-- Слоты доступных сотрудников будут добавляться динамически -->
+                    </div>
+                    <div class="availability-info" id="evening-availability-count">
+                        Доступно сотрудников для вечерней смены: <strong>0</strong>
+                    </div>
+                </div>
+                
+                <div class="time-distribution-summary">
+                    <h3><i class="fas fa-clock"></i> Распределение по времени</h3>
+                    <div class="time-slots-summary">
+                        <div class="time-summary-item">
+                            <div class="time-summary-value" id="morning-total">0</div>
+                            <div class="time-summary-label">Утро (8-12)</div>
+                            <div class="completion-time" id="morning-completion">
+                                Все завершат к 12:00
+                            </div>
+                        </div>
+                        <div class="time-summary-item">
+                            <div class="time-summary-value" id="day-total">0</div>
+                            <div class="time-summary-label">День (12-16)</div>
+                            <div class="completion-time" id="day-completion">
+                                Все завершат к 16:00
+                            </div>
+                        </div>
+                        <div class="time-summary-item">
+                            <div class="time-summary-value" id="evening-total">0</div>
+                            <div class="time-summary-label">Вечер (16-20)</div>
+                            <div class="completion-time" id="evening-completion">
+                                Все завершат к 20:00
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Система распределения сотрудников по уборкам с учетом времени &copy; 2023</p>
+            <p>Учет рабочего времени по сменам: утро (8-12), день (12-16), вечер (16-20)</p>
+        </footer>
+        
+        <div class="notification" id="notification">
+            <i class="fas fa-check-circle"></i> Распределение успешно обновлено!
+        </div>
+    </div>
+
+    <!-- Библиотеки для календаря -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ru.js"></script>
+    
+    <script>
+        // Инициализация данных
+        let employeesCount = 0;
+        let cleaningTypes = {
+            'supports': { 
+                name: 'Поддерживающая уборка', 
+                color: '#2ecc71',
+                timeSlots: {
+                    'morning': 0,
+                    'day': 0,
+                    'evening': 0
+                }
+            },
+            'general': { 
+                name: 'Генеральная уборка', 
+                color: '#e74c3c',
+                timeSlots: {
+                    'morning': 0,
+                    'day': 0,
+                    'evening': 0
+                }
+            },
+            'general-light': { 
+                name: 'Генеральная лайт', 
+                color: '#f39c12',
+                timeSlots: {
+                    'morning': 0,
+                    'day': 0,
+                    'evening': 0
+                }
+            },
+            'after-repair': { 
+                name: 'Уборка после ремонта', 
+                color: '#9b59b6',
+                timeSlots: {
+                    'morning': 0,
+                    'day': 0,
+                    'evening': 0
+                }
+            }
+        };
+        
+        // Временные интервалы
+        const timeIntervals = {
+            'morning': { name: 'Утро', hours: '8:00 - 12:00', start: 8, end: 12 },
+            'day': { name: 'День', hours: '12:00 - 16:00', start: 12, end: 16 },
+            'evening': { name: 'Вечер', hours: '16:00 - 20:00', start: 16, end: 20 }
+        };
+        
+        // === ВАШИ ДАННЫЕ ПО ДАТАМ ===
+        // Теперь можно редактировать прямо в интерфейсе!
+        let dateScheduleData = {
+            '11.12.2025': 10,   // Понедельник
+            '12.12.2025': 14,  // Вторник  
+            '13.12.2025': 15,   // Среда
+            '14.12.2025': 14,  // Четверг
+            '15.12.2025': 11,   // Пятница
+            '16.12.2025': 18,   // Суббота
+            '17.12.2025': 13    // Воскресенье
+        };
+        
+        // Хранилище распределений по датам
+        let distributionStorage = {};
+        
+        // DOM элементы
+        const shiftDateInput = document.getElementById('shift-date');
+        const shiftEmployeesInput = document.getElementById('shift-employees');
+        const availableEmployeesSpan = document.getElementById('available-employees');
+        const currentDateDisplay = document.getElementById('current-date-display');
+        const errorMessage = document.getElementById('error-message');
+        const errorText = document.getElementById('error-text');
+        const distributeBtn = document.getElementById('distribute-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const notification = document.getElementById('notification');
+        const datesListContainer = document.getElementById('dates-list-container');
+        const newDateInput = document.getElementById('new-date-input');
+        const newEmployeesInput = document.getElementById('new-employees-input');
+        const addDateBtn = document.getElementById('add-date-btn');
+        const limitWarning = document.getElementById('limit-warning');
+        const eveningAvailabilitySlots = document.getElementById('evening-availability-slots');
+        const eveningAvailabilityCount = document.getElementById('evening-availability-count');
+        
+        // Элементы для отображения распределения
+        const assignedElements = {
+            'supports': document.getElementById('supports-assigned'),
+            'general': document.getElementById('general-assigned'),
+            'general-light': document.getElementById('general-light-assigned'),
+            'after-repair': document.getElementById('after-repair-assigned')
+        };
+        
+        // Элементы для отображения времени
+        const timeCountElements = {
+            'supports': {
+                'morning': document.getElementById('supports-morning-count'),
+                'day': document.getElementById('supports-day-count'),
+                'evening': document.getElementById('supports-evening-count')
+            },
+            'general': {
+                'morning': document.getElementById('general-morning-count'),
+                'day': document.getElementById('general-day-count'),
+                'evening': document.getElementById('general-evening-count')
+            },
+            'general-light': {
+                'morning': document.getElementById('general-light-morning-count'),
+                'day': document.getElementById('general-light-day-count'),
+                'evening': document.getElementById('general-light-evening-count')
+            },
+            'after-repair': {
+                'morning': document.getElementById('after-repair-morning-count'),
+                'day': document.getElementById('after-repair-day-count'),
+                'evening': document.getElementById('after-repair-evening-count')
+            }
+        };
+        
+        // Элементы для отображения слотов
+        const slotsContainers = {
+            'supports': {
+                'morning': document.getElementById('supports-morning-slots'),
+                'day': document.getElementById('supports-day-slots'),
+                'evening': document.getElementById('supports-evening-slots')
+            },
+            'general': {
+                'morning': document.getElementById('general-morning-slots'),
+                'day': document.getElementById('general-day-slots'),
+                'evening': document.getElementById('general-evening-slots')
+            },
+            'general-light': {
+                'morning': document.getElementById('general-light-morning-slots'),
+                'day': document.getElementById('general-light-day-slots'),
+                'evening': document.getElementById('general-light-evening-slots')
+            },
+            'after-repair': {
+                'morning': document.getElementById('after-repair-morning-slots'),
+                'day': document.getElementById('after-repair-day-slots'),
+                'evening': document.getElementById('after-repair-evening-slots')
+            }
+        };
+        
+        // Элементы для отображения времени завершения
+        const completionElements = {
+            'supports': {
+                'morning': document.getElementById('supports-morning-completion'),
+                'day': document.getElementById('supports-day-completion'),
+                'evening': document.getElementById('supports-evening-completion')
+            },
+            'general': {
+                'morning': document.getElementById('general-morning-completion'),
+                'day': document.getElementById('general-day-completion'),
+                'evening': document.getElementById('general-evening-completion')
+            },
+            'general-light': {
+                'morning': document.getElementById('general-light-morning-completion'),
+                'day': document.getElementById('general-light-day-completion'),
+                'evening': document.getElementById('general-light-evening-completion')
+            },
+            'after-repair': {
+                'morning': document.getElementById('after-repair-morning-completion'),
+                'day': document.getElementById('after-repair-day-completion'),
+                'evening': document.getElementById('after-repair-evening-completion')
+            }
+        };
+        
+        // Элементы сводки
+        const totalEmployeesSpan = document.getElementById('total-employees');
+        const assignedEmployeesSpan = document.getElementById('assigned-employees');
+        const remainingEmployeesSpan = document.getElementById('remaining-employees');
+        
+        // Элементы сводки по времени
+        const timeSummaryElements = {
+            'morning': document.getElementById('morning-total'),
+            'day': document.getElementById('day-total'),
+            'evening': document.getElementById('evening-total')
+        };
+        
+        const timeCompletionElements = {
+            'morning': document.getElementById('morning-completion'),
+            'day': document.getElementById('day-completion'),
+            'evening': document.getElementById('evening-completion')
+        };
+        
+        // Инициализация календаря
+        const calendar = flatpickr(shiftDateInput, {
+            dateFormat: "d.m.Y",
+            locale: "ru",
+            onChange: function(selectedDates, dateStr) {
+                handleDateChange(dateStr);
+            }
+        });
+        
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            // Показываем список дат в интерфейсе
+            displayDatesList();
+            
+            // Устанавливаем первую дату из данных по умолчанию
+            const firstDate = Object.keys(dateScheduleData)[0];
+            if (firstDate) {
+                calendar.setDate(firstDate);
+            }
+            
+            // Устанавливаем обработчики событий для всех полей ввода времени
+            const timeInputs = document.querySelectorAll('.cleaning-time-input');
+            timeInputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    updateCleaningTypesFromInputs();
+                    validateDistribution();
+                    updateInputLimits();
+                });
+                
+                input.addEventListener('change', function() {
+                    updateCleaningTypesFromInputs();
+                    validateDistribution();
+                    updateInputLimits();
+                });
+            });
+            
+            distributeBtn.addEventListener('click', saveDistribution);
+            resetBtn.addEventListener('click', resetDistribution);
+            addDateBtn.addEventListener('click', addNewDate);
+            
+            // Добавляем обработчик Enter для поля ввода новой даты
+            newDateInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addNewDate();
+                }
+            });
+            
+            newEmployeesInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addNewDate();
+                }
+            });
+        });
+        
+        // Обновление лимитов полей ввода на основе доступных сотрудников
+        function updateInputLimits() {
+            const timeInputs = document.querySelectorAll('.cleaning-time-input');
+            const remaining = employeesCount - getTotalAssigned();
+            
+            // Обновляем максимальные значения для всех полей ввода
+            timeInputs.forEach(input => {
+                const currentValue = parseInt(input.value) || 0;
+                const maxPossible = currentValue + remaining;
+                input.max = Math.max(currentValue, maxPossible);
+                
+                // Если поле в фокусе и пытаемся ввести больше, чем доступно
+                if (input === document.activeElement) {
+                    if (remaining <= 0 && currentValue >= 1) {
+                        input.style.borderColor = '#e74c3c';
+                        input.style.backgroundColor = '#ffeaea';
+                    } else {
+                        input.style.borderColor = '';
+                        input.style.backgroundColor = '';
+                    }
+                }
+            });
+            
+            // Показываем/скрываем предупреждение о лимите
+            if (remaining <= 0) {
+                limitWarning.style.display = 'flex';
+            } else {
+                limitWarning.style.display = 'none';
+            }
+        }
+        
+        // Получение общего количества распределенных сотрудников
+        function getTotalAssigned() {
+            let total = 0;
+            for (const type in cleaningTypes) {
+                for (const timeSlot in cleaningTypes[type].timeSlots) {
+                    total += cleaningTypes[type].timeSlots[timeSlot];
+                }
+            }
+            return total;
+        }
+        
+        // Отображение списка дат в интерфейсе с возможностью редактирования
+        function displayDatesList() {
+            datesListContainer.innerHTML = '';
+            
+            // Сортируем даты по возрастанию
+            const sortedDates = Object.keys(dateScheduleData).sort((a, b) => {
+                const dateA = parseDateString(a);
+                const dateB = parseDateString(b);
+                return dateA - dateB;
+            });
+            
+            if (sortedDates.length === 0) {
+                datesListContainer.innerHTML = '<p style="text-align: center; color: #7f8c8d; padding: 20px;">Нет данных о датах. Добавьте первую дату.</p>';
+                return;
+            }
+            
+            sortedDates.forEach(date => {
+                const dateItem = document.createElement('div');
+                dateItem.className = 'date-item';
+                dateItem.dataset.date = date;
+                
+                const employeesCount = dateScheduleData[date];
+                const remainingEmployees = calculateRemainingEmployees(date);
+                
+                dateItem.innerHTML = `
+                    <div class="date-info">
+                        <div class="date-value">${date}</div>
+                        <div style="font-size: 0.85rem; color: #7f8c8d;">
+                            Всего: ${employeesCount} | Свободно: <span class="remaining-employees">${remainingEmployees}</span>
+                        </div>
+                    </div>
+                    <div class="date-employees">
+                        <input type="number" class="date-employees-input" value="${employeesCount}" min="1" max="50" style="display: none;">
+                        <span class="date-employees-display">${employeesCount}</span>
+                        <div class="date-actions">
+                            <button class="btn-icon edit" title="Редактировать">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-icon save" title="Сохранить" style="display: none;">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button class="btn-icon cancel" title="Отмена" style="display: none;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <button class="btn-icon delete" title="Удалить">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                datesListContainer.appendChild(dateItem);
+                
+                // Добавляем обработчики событий для кнопок
+                const editBtn = dateItem.querySelector('.btn-icon.edit');
+                const saveBtn = dateItem.querySelector('.btn-icon.save');
+                const cancelBtn = dateItem.querySelector('.btn-icon.cancel');
+                const deleteBtn = dateItem.querySelector('.btn-icon.delete');
+                const displaySpan = dateItem.querySelector('.date-employees-display');
+                const input = dateItem.querySelector('.date-employees-input');
+                const remainingSpan = dateItem.querySelector('.remaining-employees');
+                
+                editBtn.addEventListener('click', function() {
+                    displaySpan.style.display = 'none';
+                    input.style.display = 'block';
+                    editBtn.style.display = 'none';
+                    saveBtn.style.display = 'flex';
+                    cancelBtn.style.display = 'flex';
+                });
+                
+                saveBtn.addEventListener('click', function() {
+                    const newValue = parseInt(input.value) || 0;
+                    if (newValue < 1) {
+                        showNotification('Количество сотрудников должно быть не менее 1', 'error');
+                        return;
+                    }
+                    
+                    // Обновляем данные
+                    dateScheduleData[date] = newValue;
+                    displaySpan.textContent = newValue;
+                    displaySpan.style.display = 'inline';
+                    input.style.display = 'none';
+                    editBtn.style.display = 'flex';
+                    saveBtn.style.display = 'none';
+                    cancelBtn.style.display = 'none';
+                    
+                    // Пересчитываем свободных сотрудников
+                    const remaining = calculateRemainingEmployees(date);
+                    remainingSpan.textContent = remaining;
+                    
+                    // Если текущая дата выбрана в календаре, обновляем ее
+                    if (shiftDateInput.value === date) {
+                        handleDateChange(date);
+                    }
+                    
+                    showNotification(`Количество сотрудников для ${date} обновлено: ${newValue}`, 'success');
+                });
+                
+                cancelBtn.addEventListener('click', function() {
+                    input.value = dateScheduleData[date];
+                    displaySpan.style.display = 'inline';
+                    input.style.display = 'none';
+                    editBtn.style.display = 'flex';
+                    saveBtn.style.display = 'none';
+                    cancelBtn.style.display = 'none';
+                });
+                
+                deleteBtn.addEventListener('click', function() {
+                    if (Object.keys(dateScheduleData).length <= 1) {
+                        showNotification('Нельзя удалить последнюю дату', 'error');
+                        return;
+                    }
+                    
+                    if (confirm(`Удалить дату ${date}?`)) {
+                        delete dateScheduleData[date];
+                        delete distributionStorage[date];
+                        displayDatesList();
+                        
+                        // Если удалена текущая выбранная дата, выбираем первую доступную
+                        if (shiftDateInput.value === date) {
+                            const firstAvailableDate = Object.keys(dateScheduleData)[0];
+                            if (firstAvailableDate) {
+                                calendar.setDate(firstAvailableDate);
+                            } else {
+                                handleDateChange('');
+                            }
+                        }
+                        
+                        showNotification(`Дата ${date} удалена`, 'info');
+                    }
+                });
+                
+                // Обновляем значение при изменении поля ввода
+                input.addEventListener('change', function() {
+                    const newValue = parseInt(input.value) || 0;
+                    if (newValue < 1) {
+                        input.value = 1;
+                    } else if (newValue > 50) {
+                        input.value = 50;
+                    }
+                });
+            });
+        }
+        
+        // Функция для парсинга строки даты в формате ДД.ММ.ГГГГ
+        function parseDateString(dateStr) {
+            const parts = dateStr.split('.');
+            if (parts.length !== 3) return new Date();
+            return new Date(parts[2], parts[1] - 1, parts[0]);
+        }
+        
+        // Расчет свободных сотрудников для даты
+        function calculateRemainingEmployees(date) {
+            const total = dateScheduleData[date] || 0;
+            let assigned = 0;
+            
+            // Получаем распределение для этой даты, если оно есть
+            if (distributionStorage[date]) {
+                for (const type in distributionStorage[date]) {
+                    for (const timeSlot in distributionStorage[date][type]) {
+                        assigned += distributionStorage[date][type][timeSlot] || 0;
+                    }
+                }
+            }
+            
+            return total - assigned;
+        }
+        
+        // Добавление новой даты
+        function addNewDate() {
+            const dateStr = newDateInput.value.trim();
+            const employeesStr = newEmployeesInput.value.trim();
+            
+            if (!dateStr) {
+                showNotification('Введите дату', 'error');
+                newDateInput.focus();
+                return;
+            }
+            
+            // Проверяем формат даты
+            const dateRegex = /^\d{2}\.\d{2}\.\d{4}$/;
+            if (!dateRegex.test(dateStr)) {
+                showNotification('Введите дату в формате ДД.ММ.ГГГГ', 'error');
+                newDateInput.focus();
+                return;
+            }
+            
+            // Проверяем, существует ли уже такая дата
+            if (dateScheduleData[dateStr]) {
+                showNotification('Дата уже существует', 'error');
+                newDateInput.focus();
+                return;
+            }
+            
+            const employees = parseInt(employeesStr) || 10;
+            if (employees < 1 || employees > 50) {
+                showNotification('Количество сотрудников должно быть от 1 до 50', 'error');
+                newEmployeesInput.focus();
+                return;
+            }
+            
+            // Добавляем новую дату
+            dateScheduleData[dateStr] = employees;
+            
+            // Обновляем список дат
+            displayDatesList();
+            
+            // Очищаем поля ввода
+            newDateInput.value = '';
+            newEmployeesInput.value = '10';
+            
+            showNotification(`Дата ${dateStr} добавлена с ${employees} сотрудниками`, 'success');
+            
+            // Устанавливаем фокус на поле ввода даты
+            newDateInput.focus();
+        }
+        
+        // Обработка изменения даты
+        function handleDateChange(dateStr) {
+            currentDateDisplay.textContent = dateStr || 'не выбрана';
+            
+            // Сбрасываем поля ввода при смене даты
+            resetInputFields();
+            
+            // Проверяем, есть ли данные для выбранной даты
+            if (dateScheduleData[dateStr]) {
+                // Устанавливаем количество сотрудников из "базы данных"
+                employeesCount = dateScheduleData[dateStr];
+                shiftEmployeesInput.value = employeesCount;
+                availableEmployeesSpan.textContent = employeesCount;
+                totalEmployeesSpan.textContent = employeesCount;
+                
+                // Обновляем максимальные значения для полей ввода
+                const timeInputs = document.querySelectorAll('.cleaning-time-input');
+                timeInputs.forEach(input => {
+                    input.max = employeesCount;
+                });
+                
+                showNotification(`Загружены данные для ${dateStr}: ${employeesCount} сотрудников`, 'info');
+            } else {
+                // Если данных нет, устанавливаем 0
+                employeesCount = 0;
+                shiftEmployeesInput.value = 0;
+                availableEmployeesSpan.textContent = 0;
+                totalEmployeesSpan.textContent = 0;
+                
+                showNotification(`Для ${dateStr} нет данных о количестве сотрудников`, 'info');
+            }
+            
+            // Загружаем сохраненное распределение для этой даты, если оно есть
+            loadSavedDistribution(dateStr);
+            
+            // Обновляем сводку
+            updateSummary();
+            validateDistribution();
+            updateInputLimits();
+            
+            // Обновляем отображение свободных сотрудников в списке дат
+            updateRemainingEmployeesDisplay();
+        }
+        
+        // Обновление отображения свободных сотрудников в списке дат
+        function updateRemainingEmployeesDisplay() {
+            const dateItems = document.querySelectorAll('.date-item');
+            dateItems.forEach(item => {
+                const date = item.dataset.date;
+                const remainingSpan = item.querySelector('.remaining-employees');
+                if (remainingSpan) {
+                    const remaining = calculateRemainingEmployees(date);
+                    remainingSpan.textContent = remaining;
+                }
+            });
+        }
+        
+        // Загрузка сохраненного распределения для даты
+        function loadSavedDistribution(dateStr) {
+            if (distributionStorage[dateStr]) {
+                const savedData = distributionStorage[dateStr];
+                
+                // Восстанавливаем значения для каждого типа уборки и времени
+                for (const type in savedData) {
+                    if (cleaningTypes[type]) {
+                        for (const timeSlot in savedData[type]) {
+                            cleaningTypes[type].timeSlots[timeSlot] = savedData[type][timeSlot];
+                            
+                            // Находим соответствующий input и устанавливаем значение
+                            const input = document.querySelector(`.cleaning-time-input[data-type="${type}"][data-time="${timeSlot}"]`);
+                            if (input) {
+                                input.value = savedData[type][timeSlot];
+                            }
+                        }
+                    }
+                }
+                
+                // Обновляем данные
+                updateCleaningTypesFromInputs();
+                showNotification(`Загружено сохраненное распределение для ${dateStr}`, 'info');
+            }
+        }
+        
+        // Сохранение распределения
+        function saveDistribution() {
+            const selectedDate = shiftDateInput.value;
+            
+            if (!selectedDate) {
+                showNotification('Сначала выберите дату!', 'error');
+                return;
+            }
+            
+            if (!validateDistribution()) {
+                showNotification('Ошибка распределения! Проверьте введенные данные.', 'error');
+                return;
+            }
+            
+            // Сохраняем распределение для текущей даты
+            distributionStorage[selectedDate] = {};
+            for (const type in cleaningTypes) {
+                distributionStorage[selectedDate][type] = {
+                    'morning': cleaningTypes[type].timeSlots.morning,
+                    'day': cleaningTypes[type].timeSlots.day,
+                    'evening': cleaningTypes[type].timeSlots.evening
+                };
+            }
+            
+            // Обновляем отображение свободных сотрудников в списке дат
+            updateRemainingEmployeesDisplay();
+            
+            showNotification(`Распределение для ${selectedDate} успешно сохранено!`, 'success');
+        }
+        
+        // Сброс полей ввода
+        function resetInputFields() {
+            const timeInputs = document.querySelectorAll('.cleaning-time-input');
+            timeInputs.forEach(input => {
+                input.value = 0;
+            });
+            
+            updateCleaningTypesFromInputs();
+        }
+        
+        // Сброс распределения
+        function resetDistribution() {
+            const selectedDate = shiftDateInput.value;
+            
+            if (!selectedDate) {
+                showNotification('Сначала выберите дату!', 'error');
+                return;
+            }
+            
+            // Сбрасываем значения полей ввода
+            resetInputFields();
+            
+            // Удаляем сохраненное распределение для этой даты
+            delete distributionStorage[selectedDate];
+            
+            // Обновляем отображение свободных сотрудников в списке дат
+            updateRemainingEmployeesDisplay();
+            
+            showNotification(`Распределение для ${selectedDate} сброшено!`, 'info');
+            validateDistribution();
+            updateInputLimits();
+        }
+        
+        // Обновление данных о типах уборок из полей ввода
+        function updateCleaningTypesFromInputs() {
+            const timeInputs = document.querySelectorAll('.cleaning-time-input');
+            
+            // Сбрасываем значения
+            for (const type in cleaningTypes) {
+                cleaningTypes[type].timeSlots.morning = 0;
+                cleaningTypes[type].timeSlots.day = 0;
+                cleaningTypes[type].timeSlots.evening = 0;
+            }
+            
+            // Обновляем значения из полей ввода
+            timeInputs.forEach(input => {
+                const type = input.dataset.type;
+                const time = input.dataset.time;
+                const count = parseInt(input.value) || 0;
+                
+                if (type in cleaningTypes && time in cleaningTypes[type].timeSlots) {
+                    cleaningTypes[type].timeSlots[time] = count;
+                }
+            });
+            
+            renderDistribution();
+            updateSummary();
+            updateEveningAvailability();
+        }
+        
+        // Обновление отображения доступности для вечерней смены
+        function updateEveningAvailability() {
+            eveningAvailabilitySlots.innerHTML = '';
+            
+            // Считаем сотрудников, которые завершили утреннюю смену
+            let morningEmployees = 0;
+            for (const type in cleaningTypes) {
+                morningEmployees += cleaningTypes[type].timeSlots.morning;
+            }
+            
+            // Создаем слоты для доступных сотрудников
+            for (let i = 1; i <= morningEmployees; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'availability-slot';
+                slot.textContent = i;
+                slot.title = `Сотрудник ${i} завершит работу в 12:00 и будет доступен для вечерней смены (16-20)`;
+                eveningAvailabilitySlots.appendChild(slot);
+            }
+            
+            // Обновляем счетчик
+            eveningAvailabilityCount.innerHTML = `Доступно сотрудников для вечерней смены: <strong>${morningEmployees}</strong>`;
+            
+            // Подсвечиваем сотрудников в утренних слотах
+            highlightAvailableEveningEmployees(morningEmployees);
+        }
+        
+        // Подсветка сотрудников, доступных для вечерней смены
+        function highlightAvailableEveningEmployees(count) {
+            // Убираем подсветку со всех слотов
+            const allSlots = document.querySelectorAll('.slot.filled');
+            allSlots.forEach(slot => {
+                slot.classList.remove('available-evening');
+            });
+            
+            // Подсвечиваем первых count сотрудников в утренних слотах
+            let highlighted = 0;
+            for (const type in slotsContainers) {
+                const morningSlots = slotsContainers[type].morning.querySelectorAll('.slot.filled');
+                for (const slot of morningSlots) {
+                    if (highlighted < count) {
+                        slot.classList.add('available-evening');
+                        highlighted++;
+                    } else {
+                        break;
+                    }
+                }
+                if (highlighted >= count) break;
+            }
+        }
+        
+        // Валидация распределения
+        function validateDistribution() {
+            let totalAssigned = getTotalAssigned();
+            let isValid = true;
+            let errorMsg = '';
+            
+            // Проверяем, не превышает ли распределение общее количество сотрудников
+            if (totalAssigned > employeesCount) {
+                isValid = false;
+                errorMsg = `Распределено ${totalAssigned} сотрудников, но на смене только ${employeesCount}. Уменьшите количество в одном из видов уборок.`;
+            }
+            
+            // Проверяем, чтобы значения были неотрицательными
+            for (const type in cleaningTypes) {
+                for (const timeSlot in cleaningTypes[type].timeSlots) {
+                    if (cleaningTypes[type].timeSlots[timeSlot] < 0) {
+                        isValid = false;
+                        errorMsg = 'Количество сотрудников не может быть отрицательным.';
+                        break;
+                    }
+                }
+                if (!isValid) break;
+            }
+            
+            // Показываем или скрываем сообщение об ошибке
+            if (!isValid) {
+                errorText.textContent = errorMsg;
+                errorMessage.style.display = 'block';
+                distributeBtn.disabled = true;
+                distributeBtn.style.opacity = '0.6';
+                distributeBtn.style.cursor = 'not-allowed';
+            } else {
+                errorMessage.style.display = 'none';
+                distributeBtn.disabled = false;
+                distributeBtn.style.opacity = '1';
+                distributeBtn.style.cursor = 'pointer';
+            }
+            
+            return isValid;
+        }
+        
+        // Отображение распределения
+        function renderDistribution() {
+            // Очищаем все слоты
+            for (const type in slotsContainers) {
+                for (const timeSlot in slotsContainers[type]) {
+                    slotsContainers[type][timeSlot].innerHTML = '';
+                }
+            }
+            
+            // Обновляем данные для каждого типа уборки
+            for (const type in cleaningTypes) {
+                const typeData = cleaningTypes[type];
+                let totalForType = 0;
+                
+                // Считаем общее количество для типа уборки
+                for (const timeSlot in typeData.timeSlots) {
+                    totalForType += typeData.timeSlots[timeSlot];
+                }
+                
+                // Обновляем общее количество для типа уборки
+                assignedElements[type].textContent = totalForType;
+                
+                // Обновляем каждый временной слот
+                for (const timeSlot in typeData.timeSlots) {
+                    const count = typeData.timeSlots[timeSlot];
+                    const container = slotsContainers[type][timeSlot];
+                    const countElement = timeCountElements[type][timeSlot];
+                    const completionElement = completionElements[type][timeSlot];
+                    
+                    // Обновляем счетчик
+                    countElement.textContent = `${count} чел.`;
+                    
+                    // Создаем заполненные слоты
+                    for (let i = 1; i <= count; i++) {
+                        const slot = document.createElement('div');
+                        slot.className = 'slot filled';
+                        slot.textContent = i;
+                        slot.style.backgroundColor = typeData.color;
+                        container.appendChild(slot);
+                    }
+                    
+                    // Создаем пустые слоты
+                    const maxSlots = Math.max(5, count);
+                    for (let i = count + 1; i <= maxSlots; i++) {
+                        const slot = document.createElement('div');
+                        slot.className = 'slot empty';
+                        slot.textContent = i;
+                        container.appendChild(slot);
+                    }
+                    
+                    // Обновляем информацию о времени завершения
+                    if (count > 0) {
+                        const endTime = timeIntervals[timeSlot].end;
+                        completionElement.textContent = `Все завершат к ${endTime}:00`;
+                    } else {
+                        completionElement.textContent = `Завершение: -`;
+                    }
+                }
+            }
+            
+            // Обновляем сводку по времени
+            updateTimeSummary();
+        }
+        
+        // Обновление сводки
+        function updateSummary() {
+            let totalAssigned = getTotalAssigned();
+            
+            assignedEmployeesSpan.textContent = totalAssigned;
+            const remaining = employeesCount - totalAssigned;
+            remainingEmployeesSpan.textContent = remaining >= 0 ? remaining : 0;
+            
+            // Обновляем поле "Доступно"
+            availableEmployeesSpan.textContent = remaining >= 0 ? remaining : 0;
+        }
+        
+        // Обновление сводки по времени
+        function updateTimeSummary() {
+            // Считаем количество сотрудников по временным интервалам
+            const timeTotals = {
+                'morning': 0,
+                'day': 0,
+                'evening': 0
+            };
+            
+            for (const type in cleaningTypes) {
+                for (const timeSlot in cleaningTypes[type].timeSlots) {
+                    timeTotals[timeSlot] += cleaningTypes[type].timeSlots[timeSlot];
+                }
+            }
+            
+            // Обновляем значения в интерфейсе
+            for (const timeSlot in timeTotals) {
+                timeSummaryElements[timeSlot].textContent = timeTotals[timeSlot];
+                
+                // Обновляем информацию о завершении
+                if (timeTotals[timeSlot] > 0) {
+                    const endTime = timeIntervals[timeSlot].end;
+                    timeCompletionElements[timeSlot].textContent = `Все завершат к ${endTime}:00`;
+                } else {
+                    timeCompletionElements[timeSlot].textContent = `Нет назначенных сотрудников`;
+                }
+            }
+        }
+        
+        // Показ уведомления
+        function showNotification(message, type = 'success') {
+            // Устанавливаем цвет в зависимости от типа уведомления
+            if (type === 'error') {
+                notification.style.backgroundColor = '#e74c3c';
+                notification.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+            } else if (type === 'info') {
+                notification.style.backgroundColor = '#3498db';
+                notification.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
+            } else {
+                notification.style.backgroundColor = '#2ecc71';
+                notification.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+            }
+            
+            // Показываем уведомление
+            notification.style.display = 'block';
+            
+            // Скрываем уведомление через 3 секунды
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
